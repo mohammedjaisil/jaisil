@@ -14,6 +14,14 @@ const CustomCursor = () => {
   const springY = useSpring(mouseY, { stiffness: 350, damping: 35 });
 
   useEffect(() => {
+    // Check if device is mobile or touch
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+    
+    if (isMobile) {
+      document.body.style.cursor = "auto";
+      return;
+    }
+
     // Hide default cursor
     document.body.style.cursor = "none";
     
@@ -21,7 +29,6 @@ const CustomCursor = () => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
 
-      // Debounce hovering check slightly or use a more efficient way
       const target = e.target as HTMLElement;
       const shouldHover = (
         target.tagName === "BUTTON" ||
@@ -31,7 +38,6 @@ const CustomCursor = () => {
         target.classList.contains("cursor-pointer")
       );
       
-      // Only trigger state update if the value changed
       if (shouldHover !== isHovering) {
         setIsHovering(shouldHover);
       }
@@ -50,8 +56,14 @@ const CustomCursor = () => {
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleClick);
+      document.body.style.cursor = "auto";
     };
-  }, [isHovering]); // Re-bind when isHovering changes to keep it in sync
+  }, [isHovering]);
+
+  // Don't render anything on mobile
+  if (typeof window !== 'undefined' && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768)) {
+    return null;
+  }
 
   return (
     <>

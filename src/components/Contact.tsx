@@ -35,25 +35,38 @@ const Contact = () => {
       
       if (supabaseError) throw supabaseError;
 
-      // 2. Send email alert via Web3Forms (if access key is provided)
+      // 2. Send email alert via Web3Forms
       const web3formsAccessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
       if (web3formsAccessKey) {
-        await fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            access_key: web3formsAccessKey,
-            subject: `New Contact Message from ${formData.name}`,
-            from_name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            message: formData.message,
-            redirect: "https://jaisil.vercel.app/contact"
-          })
-        });
+        try {
+          const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              access_key: web3formsAccessKey,
+              subject: `New Contact from ${formData.name}`,
+              from_name: formData.name,
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              message: formData.message,
+              from: "Mohammed Jaisil Portfolio",
+              redirect: "https://mohammedjaisil.vercel.app"
+            })
+          });
+          
+          const result = await response.json();
+          if (!result.success) {
+            console.error("Web3Forms Error:", result);
+          }
+        } catch (emailErr) {
+          console.error("Email submission error:", emailErr);
+        }
+      } else {
+        console.warn("VITE_WEB3FORMS_ACCESS_KEY is missing. No email will be sent.");
       }
 
       toast({
