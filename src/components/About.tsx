@@ -33,7 +33,7 @@ const About = () => {
                   initial={{ opacity: 0, y: 50 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                 >
-                  03
+                  05
                 </motion.span>
                 <span className="text-primary text-2xl font-black uppercase tracking-[0.5em] -mt-10 block">
                   Years+
