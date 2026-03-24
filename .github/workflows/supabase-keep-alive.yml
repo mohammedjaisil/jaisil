@@ -1,0 +1,28 @@
+name: Supabase Keep-Alive Ping
+
+on:
+  schedule:
+    # Runs every 3 days at 00:00 UTC (well within the 7-day sleep threshold)
+    - cron: '0 0 */3 * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  ping:
+    name: Ping Supabase to prevent sleep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          echo "Pinging Supabase at $(date)..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X GET "${{ secrets.VITE_SUPABASE_URL }}/rest/v1/products?select=id&limit=1" \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}")
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            echo "✅ Supabase is awake and responding."
+          else
+            echo "⚠️ Unexpected status code: $STATUS"
+            exit 1
+          fi
