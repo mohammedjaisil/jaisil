@@ -8,7 +8,7 @@ export async function pingSupabase(): Promise<void> {
   try {
     const start = Date.now();
     const { error } = await supabase
-      .from("products")
+      .from("projects")
       .select("id")
       .limit(1)
       .maybeSingle();

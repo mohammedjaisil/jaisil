@@ -21,30 +21,26 @@ const ProjectDetails = () => {
   const heroScale   = useTransform(scrollYProgress, [0, 0.2], [1, 1.1]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.5]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
-  }
+  const projectIndex = project ? allProjects.findIndex((p) => p.id === project.id) : -1;
+  const prevProject  = project && allProjects.length > 1 ? allProjects[(projectIndex - 1 + allProjects.length) % allProjects.length] : null;
+  const nextProject  = project && allProjects.length > 1 ? allProjects[(projectIndex + 1) % allProjects.length] : null;
 
-  if (!project) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-4xl font-bold mb-4">Project Not Found</h1>
-        <p className="text-muted-foreground mb-8">The project you are looking for does not exist.</p>
-        <Button onClick={() => navigate("/projects")}>Back to Projects</Button>
-      </div>
-    );
-  }
-
-  const projectIndex = allProjects.findIndex((p) => p.id === project.id);
-  const prevProject  = allProjects[(projectIndex - 1 + allProjects.length) % allProjects.length];
-  const nextProject  = allProjects[(projectIndex + 1) % allProjects.length];
-
+  // Always attach ref so useScroll never crashes on an unhydrated ref
   return (
     <div className="min-h-screen bg-transparent text-foreground" ref={containerRef}>
+      {isLoading && (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      )}
+      {!isLoading && !project && (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+          <h1 className="text-4xl font-bold mb-4">Project Not Found</h1>
+          <p className="text-muted-foreground mb-8">The project you are looking for does not exist.</p>
+          <Button onClick={() => navigate("/projects")}>Back to Projects</Button>
+        </div>
+      )}
+      {!isLoading && project && (<>
       <Navigation />
 
       {/* Hero */}
@@ -204,6 +200,7 @@ const ProjectDetails = () => {
       )}
 
       <Footer />
+      </>)}
     </div>
   );
 };
