@@ -14,7 +14,7 @@ const Footer = () => {
     { icon: Github,       href: "https://github.com/mohammedjaisil",    label: "GitHub" },
     { icon: Linkedin,     href: "https://www.linkedin.com/in/jaisil-k/", label: "LinkedIn" },
     { icon: Instagram,    href: "https://www.instagram.com/jaisil__",    label: "Instagram" },
-    { icon: WhatsAppIcon, href: "https://wa.me/918547489081",             label: "WhatsApp" },
+    { icon: WhatsAppIcon, href: "https://wa.me/971522305216",             label: "WhatsApp" },
     { icon: Mail,         href: "mailto:jaisilmohammed@gmail.com",        label: "Email" },
   ];
 
