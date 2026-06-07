@@ -6,7 +6,7 @@ import { useProject, useProjects } from "@/hooks/useProjects";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -16,7 +16,7 @@ const ProjectDetails = () => {
   const { data: project, isLoading } = useProject(id || "");
   const { data: allProjects = [] } = useProjects();
 
-  useEffect(() => { window.scrollTo(0, 0); }, [id]);
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, [id]);
 
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
   const heroY       = useTransform(scrollYProgress, [0, 0.3], ["0%", "30%"]);

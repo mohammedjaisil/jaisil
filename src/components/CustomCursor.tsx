@@ -1,112 +1,133 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { motion, useSpring, useMotionValue } from "framer-motion";
+
+const isTouchDevice = () =>
+  typeof window !== "undefined" &&
+  (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth < 768);
 
 const CustomCursor = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
-  
-  // Use MotionValues for high-performance positioning without Re-renders
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
 
-  // Smooth out the motion
-  const springX = useSpring(mouseX, { stiffness: 350, damping: 35 });
-  const springY = useSpring(mouseY, { stiffness: 350, damping: 35 });
+  // Raw mouse position
+  const mouseX = useMotionValue(-100);
+  const mouseY = useMotionValue(-100);
+
+  // ── Main dot — snappy, precise ──────────────────────────────────────────────
+  const dotX = useSpring(mouseX, { stiffness: 600, damping: 32, mass: 0.4 });
+  const dotY = useSpring(mouseY, { stiffness: 600, damping: 32, mass: 0.4 });
+
+  // ── Trail 1 — follows main dot, softer ─────────────────────────────────────
+  const t1X = useSpring(dotX, { stiffness: 140, damping: 18, mass: 0.6 });
+  const t1Y = useSpring(dotY, { stiffness: 140, damping: 18, mass: 0.6 });
+
+  // ── Trail 2 — follows trail 1, more lag ────────────────────────────────────
+  const t2X = useSpring(t1X, { stiffness: 80, damping: 16, mass: 0.8 });
+  const t2Y = useSpring(t1Y, { stiffness: 80, damping: 16, mass: 0.8 });
+
+  // ── Trail 3 — slowest, most fluid ──────────────────────────────────────────
+  const t3X = useSpring(t2X, { stiffness: 45, damping: 14, mass: 1 });
+  const t3Y = useSpring(t2Y, { stiffness: 45, damping: 14, mass: 1 });
 
   useEffect(() => {
-    // Check if device is mobile or touch
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
-    
-    if (isMobile) {
-      document.body.style.cursor = "auto";
-      return;
-    }
-
-    // Hide default cursor
+    if (isTouchDevice()) { document.body.style.cursor = "auto"; return; }
     document.body.style.cursor = "none";
-    
-    const handleMouseMove = (e: MouseEvent) => {
+
+    const onMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
 
-      const target = e.target as HTMLElement;
-      const shouldHover = (
-        target.tagName === "BUTTON" ||
-        target.tagName === "A" ||
-        target.closest("button") !== null ||
-        target.closest("a") !== null ||
-        target.classList.contains("cursor-pointer")
-      );
-      
-      if (shouldHover !== isHovering) {
-        setIsHovering(shouldHover);
-      }
+      const el = e.target as HTMLElement;
+      const hovering =
+        el.tagName === "BUTTON" ||
+        el.tagName === "A" ||
+        !!el.closest("button") ||
+        !!el.closest("a") ||
+        el.classList.contains("cursor-pointer");
+      setIsHovering(hovering);
     };
 
-    const handleClick = (e: MouseEvent) => {
-      const newRipple = { id: Date.now(), x: e.clientX, y: e.clientY };
-      setRipples((prev) => [...prev, newRipple]);
-      setTimeout(() => {
-        setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
-      }, 800);
+    const onClick = (e: MouseEvent) => {
+      const r = { id: Date.now(), x: e.clientX, y: e.clientY };
+      setRipples((p) => [...p, r]);
+      setTimeout(() => setRipples((p) => p.filter((x) => x.id !== r.id)), 700);
     };
 
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("mousedown", handleClick);
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("mousedown", onClick);
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mousedown", handleClick);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mousedown", onClick);
       document.body.style.cursor = "auto";
     };
-  }, [isHovering]);
+  }, []);
 
-  // Don't render anything on mobile
-  if (typeof window !== 'undefined' && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768)) {
-    return null;
-  }
+  if (isTouchDevice()) return null;
+
+  const base = "fixed top-0 left-0 rounded-full pointer-events-none will-change-transform";
+  const center = { translateX: "-50%", translateY: "-50%" };
 
   return (
     <>
-      {/* Ripple Effect - Optimized with lower duration */}
-      {ripples.map((ripple) => (
+      {/* ── Click ripple ── */}
+      {ripples.map((r) => (
         <motion.div
-          key={ripple.id}
-          initial={{ opacity: 0.5, scale: 0, x: ripple.x - 25, y: ripple.y - 25 }}
-          animate={{ opacity: 0, scale: 3 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="fixed top-0 left-0 w-[50px] h-[50px] border border-primary/40 rounded-full pointer-events-none z-[9999] will-change-transform"
+          key={r.id}
+          className={`${base} border border-primary/40 z-[9998]`}
+          initial={{ opacity: 0.7, scale: 0, width: 40, height: 40, x: r.x - 20, y: r.y - 20 }}
+          animate={{ opacity: 0, scale: 2.8 }}
+          transition={{ duration: 0.65, ease: "easeOut" }}
+          style={{ ...center, translateX: "0", translateY: "0" }}
         />
       ))}
 
-      {/* Main Cursor Dot - Optimized with Spring MotionValues */}
+      {/* ── Trail 3 — faintest, slowest ── */}
       <motion.div
-        className="fixed top-0 left-0 w-4 h-4 bg-primary rounded-full pointer-events-none z-[10000] mix-blend-difference will-change-transform"
-        style={{
-          x: springX,
-          y: springY,
-          translateX: "-50%",
-          translateY: "-50%",
-        }}
-        animate={{
-          scale: isHovering ? 2.5 : 1,
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className={`${base} bg-primary z-[9999]`}
+        style={{ x: t3X, y: t3Y, ...center, width: 4, height: 4, opacity: 0.18 }}
       />
 
-      {/* Outer Ring - Optimized with Spring MotionValues */}
+      {/* ── Trail 2 ── */}
       <motion.div
-        className="fixed top-0 left-0 w-8 h-8 border border-primary rounded-full pointer-events-none z-[10000] will-change-transform"
+        className={`${base} bg-primary z-[9999]`}
+        style={{ x: t2X, y: t2Y, ...center, width: 5.5, height: 5.5, opacity: 0.32 }}
+      />
+
+      {/* ── Trail 1 ── */}
+      <motion.div
+        className={`${base} bg-primary z-[9999]`}
+        style={{ x: t1X, y: t1Y, ...center, width: 7, height: 7, opacity: 0.52 }}
+      />
+
+      {/* ── Main dot ── */}
+      <motion.div
+        className={`${base} z-[10000]`}
         style={{
-          x: springX,
-          y: springY,
-          translateX: "-50%",
-          translateY: "-50%",
+          x: dotX,
+          y: dotY,
+          ...center,
+          backgroundColor: "hsl(var(--primary))",
+          boxShadow: "0 0 10px 3px hsl(var(--primary)/0.55)",
         }}
         animate={{
-          scale: isHovering ? 1.8 : 1,
-          opacity: isHovering ? 0.4 : 0.8,
+          width:  isHovering ? 18 : 10,
+          height: isHovering ? 18 : 10,
+          opacity: 1,
         }}
-        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+        transition={{ type: "spring", stiffness: 380, damping: 24 }}
+      />
+
+      {/* ── Hover ring (only on interactive elements) ── */}
+      <motion.div
+        className={`${base} border border-primary/35 z-[9999]`}
+        style={{ x: dotX, y: dotY, ...center }}
+        animate={{
+          width:   isHovering ? 42 : 0,
+          height:  isHovering ? 42 : 0,
+          opacity: isHovering ? 1 : 0,
+        }}
+        transition={{ type: "spring", stiffness: 280, damping: 22 }}
       />
     </>
   );
