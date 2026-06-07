@@ -210,8 +210,8 @@ const Contact = () => {
             jaisilmohammed@gmail.com
           </a>
           <span className="hidden md:block">•</span>
-          <a href="tel:+971509921123" className="hover:text-foreground transition-colors">
-            +971 50 992 1123
+          <a href="tel:+971522305216" className="hover:text-foreground transition-colors">
+            +971 52 230 5216
           </a>
           <span className="hidden md:block">•</span>
           <span>Dubai, UAE</span>

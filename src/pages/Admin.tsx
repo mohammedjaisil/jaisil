@@ -1132,7 +1132,7 @@ const Admin = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Phone Number</label>
-                <input className="w-full bg-background border px-4 py-2.5 rounded-lg" defaultValue="+971 50 992 1123" />
+                <input className="w-full bg-background border px-4 py-2.5 rounded-lg" defaultValue="+971 52 230 5216" />
               </div>
               <div className="pt-4 border-t">
                 <Button disabled>Save Settings (Coming Soon)</Button>
